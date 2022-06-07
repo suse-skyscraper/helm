@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "skyscraper.fullname" . }}-test-connection"
+  labels:
+    {{- include "skyscraper.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "skyscraper.fullname" . }}:{{ .Values.service.port }}']
+  restartPolicy: Never
