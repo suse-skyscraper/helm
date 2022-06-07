@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  skyscraper:
+  - apiVersion: v2
+    appVersion: 0.1.1
+    created: "2022-06-07T15:55:14.203985125Z"
+    description: A Helm chart for Kubernetes
+    digest: 37156f7e48d4c1f1f5e6d66b8a272c8e0dd81f16a25850e13324ac65a522b669
+    name: skyscraper
+    type: application
+    urls:
+    - https://github.com/suse-skyscraper/skyscraper-helm-charts/releases/download/skyscraper-0.1.0/skyscraper-0.1.0.tgz
+    version: 0.1.0
+generated: "2022-06-07T15:55:14.204000126Z"
