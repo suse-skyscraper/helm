@@ -1,0 +1,57 @@
+{{- if .Values.skyscraper_web.autoscaling.enabled }}
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "skyscraper-web.fullname" . }}
+  labels:
+    {{- include "skyscraper-web.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "skyscraper-web.fullname" . }}
+  minReplicas: {{ .Values.skyscraper_web.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.skyscraper_web.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.skyscraper_web.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: {{ .Values.skyscraper_web.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.skyscraper_web.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        targetAverageUtilization: {{ .Values.skyscraper_web.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}
+---
+{{- if .Values.skyscraper_server.autoscaling.enabled }}
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "skyscraper-server.fullname" . }}
+  labels:
+    {{- include "skyscraper-server.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "skyscraper-server.fullname" . }}
+  minReplicas: {{ .Values.skyscraper_server.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.skyscraper_server.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.skyscraper_server.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: {{ .Values.skyscraper_server.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.skyscraper_server.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        targetAverageUtilization: {{ .Values.skyscraper_server.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}

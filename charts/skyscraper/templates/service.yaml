@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "skyscraper-web.fullname" . }}
+  labels:
+    {{- include "skyscraper-web.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.skyscraper_web.service.type }}
+  ports:
+    - port: {{ .Values.skyscraper_web.service.port }}
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "skyscraper-web.selectorLabels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "skyscraper-server.fullname" . }}
+  labels:
+    {{- include "skyscraper-server.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.skyscraper_server.service.type }}
+  ports:
+    - port: {{ .Values.skyscraper_server.service.port }}
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "skyscraper-server.selectorLabels" . | nindent 4 }}

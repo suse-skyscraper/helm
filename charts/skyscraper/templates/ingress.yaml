@@ -1,0 +1,93 @@
+{{- if .Values.skyscraper_web.ingress.enabled -}}
+{{- $skyscraperWebFullName := include "skyscraper-web.fullname" . -}}
+{{- $skyscraperWebSvcPort := .Values.skyscraper_web.service.port -}}
+{{- if and .Values.skyscraper_web.ingress.className (not (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion)) }}
+  {{- if not (hasKey .Values.skyscraper_web.ingress.annotations "kubernetes.io/ingress.class") }}
+  {{- $_ := set .Values.skyscraper_web.ingress.annotations "kubernetes.io/ingress.class" .Values.skyscraper_web.ingress.className}}
+  {{- end }}
+{{- end }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $skyscraperWebFullName }}
+  labels:
+    {{- include "skyscraper-web.labels" . | nindent 4 }}
+  {{- with .Values.skyscraper_web.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  ingressClassName: {{ .Values.skyscraper_web.ingress.className }}
+  {{- if .Values.skyscraper_web.ingress.tls }}
+  tls:
+    {{- range .Values.skyscraper_web.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.skyscraper_web.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ $skyscraperWebFullName }}
+                port:
+                  number: {{ $skyscraperWebSvcPort }}
+          {{- end }}
+    {{- end }}
+{{- end }}
+---
+{{- if .Values.skyscraper_web.ingress.enabled -}}
+{{- $skyscraperServerFullName := include "skyscraper-server.fullname" . -}}
+{{- $skyscraperWebSvcPort := .Values.skyscraper_server.service.port -}}
+{{- if and .Values.skyscraper_server.ingress.className (not (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion)) }}
+  {{- if not (hasKey .Values.skyscraper_server.ingress.annotations "kubernetes.io/ingress.class") }}
+  {{- $_ := set .Values.skyscraper_server.ingress.annotations "kubernetes.io/ingress.class" .Values.skyscraper_server.ingress.className}}
+  {{- end }}
+{{- end }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $skyscraperServerFullName }}
+  labels:
+    {{- include "skyscraper-server.labels" . | nindent 4 }}
+  {{- with .Values.skyscraper_server.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  ingressClassName: {{ .Values.skyscraper_server.ingress.className }}
+  {{- if .Values.skyscraper_server.ingress.tls }}
+  tls:
+    {{- range .Values.skyscraper_server.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.skyscraper_server.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ $skyscraperServerFullName }}
+                port:
+                  number: {{ $skyscraperWebSvcPort }}
+          {{- end }}
+    {{- end }}
+{{- end }}

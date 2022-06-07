@@ -1,0 +1,160 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "skyscraper-web.fullname" . }}
+  labels:
+    {{- include "skyscraper-web.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.skyscraper_web.autoscaling.enabled }}
+  replicas: {{ .Values.skyscraper_web.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "skyscraper-web.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.skyscraper_web.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "skyscraper-web.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "skyscraper-web.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.skyscraper_web.podSecurityContext | nindent 8 }}
+      containers:
+        - name: skyscraper-web
+          securityContext:
+            {{- toYaml .Values.skyscraper_web.securityContext | nindent 12 }}
+          image: "{{ .Values.skyscraper_web.image.name }}"
+          imagePullPolicy: {{ .Values.skyscraper_web.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 60
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 60
+          resources:
+            {{- toYaml .Values.skyscraper_web.resources | nindent 12 }}
+          {{- if .Values.skyscraper_web.config.enabled }}
+          volumeMounts:
+            - mountPath: /app/src/environments/environment.prod.ts
+              name: skyscraper-web-config
+              subPath: environment.prod.ts
+            - mountPath: /app/src/environments/environment.ts
+              name: skyscraper-web-config
+              subPath: environment.prod.ts
+          {{- end }}
+      {{- with .Values.skyscraper_web.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.skyscraper_web.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.skyscraper_web.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        {{- if .Values.skyscraper_web.config.enabled }}
+        - name: skyscraper-web-config
+          configMap:
+            name: {{ .Values.skyscraper_web.config.configMapName }}
+            items:
+              - key: {{ .Values.skyscraper_web.config.environmentPath }}
+                path: environment.prod.ts
+        {{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "skyscraper-server.fullname" . }}
+  labels:
+    {{- include "skyscraper-server.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.skyscraper_server.autoscaling.enabled }}
+  replicas: {{ .Values.skyscraper_server.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "skyscraper-server.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.skyscraper_server.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "skyscraper-server.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "skyscraper-server.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.skyscraper_server.podSecurityContext | nindent 8 }}
+      containers:
+        - name: skyscraper-server
+          securityContext:
+            {{- toYaml .Values.skyscraper_server.securityContext | nindent 12 }}
+          image: "{{ .Values.skyscraper_server.image.name }}"
+          imagePullPolicy: {{ .Values.skyscraper_server.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+          resources:
+            {{- toYaml .Values.skyscraper_server.resources | nindent 12 }}
+          {{- if .Values.skyscraper_server.config.enabled }}
+          volumeMounts:
+            - mountPath: /app/config.yaml
+              name: skyscraper-server-config
+              subPath: config.yaml
+          {{- end }}
+      {{- with .Values.skyscraper_server.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.skyscraper_server.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.skyscraper_server.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        {{- if .Values.skyscraper_server.config.enabled }}
+        - name: skyscraper-server-config
+          configMap:
+            name: {{ .Values.skyscraper_server.config.configMapName }}
+            items:
+              - key: {{ .Values.skyscraper_server.config.environmentPath }}
+                path: config.yaml
+        {{- end }}
