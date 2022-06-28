@@ -1,0 +1,54 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "db-migration-{{ .Release.Name }}"
+  annotations:
+    "helm.sh/hook": pre-install
+spec:
+  template:
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.skyscraper_server.podSecurityContext | nindent 8 }}
+      containers:
+        - name: skyscraper-cloud-sync
+          image: "{{ .Values.skyscraper_server.image.name }}"
+          imagePullPolicy: {{ .Values.skyscraper_server.image.pullPolicy }}
+          command:
+            - /usr/local/bin/skyscraper-server
+            - migrate
+            - up
+          {{- if .Values.skyscraper_server.config.enabled }}
+          volumeMounts:
+            - mountPath: /app/config.yaml
+              name: skyscraper-server-config
+              subPath: config.yaml
+          {{- end }}
+          resources:
+            {{- toYaml .Values.skyscraper_server.resources | nindent 12 }}
+      {{- with .Values.skyscraper_server.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.skyscraper_server.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.skyscraper_server.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      restartPolicy: OnFailure
+      volumes:
+        {{- if .Values.skyscraper_server.config.enabled }}
+        - name: skyscraper-server-config
+          configMap:
+            name: {{ .Values.skyscraper_server.config.configMapName }}
+            items:
+              - key: {{ .Values.skyscraper_server.config.environmentPath }}
+                path: config.yaml
+        {{- end }}
+
