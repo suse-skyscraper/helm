@@ -6,6 +6,13 @@ metadata:
     "helm.sh/hook": pre-install
 spec:
   template:
+    metadata:
+      {{- with .Values.skyscraper_server.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "skyscraper-server.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:

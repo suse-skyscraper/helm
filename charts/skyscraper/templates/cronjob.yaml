@@ -3,11 +3,17 @@ kind: CronJob
 metadata:
   name: skyscraper-cloud-sync
 spec:
-  schedule: "*/2 * * * *"
+  schedule: "*/60 * * * *"
   jobTemplate:
     spec:
-
       template:
+        metadata:
+          {{- with .Values.skyscraper_server.podAnnotations }}
+          annotations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          labels:
+            {{- include "skyscraper-server.selectorLabels" . | nindent 12 }}
         spec:
           {{- with .Values.imagePullSecrets }}
           imagePullSecrets:
